@@ -69,6 +69,15 @@ class _SwipeAnimationScreenViewState extends State<SwipeAnimationScreenView> wit
   late final Animation _rightAnimation;
   bool isRightAnimated = false;
 
+  final _globalKey = GlobalKey();
+
+  @override
+  void dispose() {
+    _leftAnimationController.dispose();
+    _rightAnimationController.dispose();
+    super.dispose();
+  }
+
   @override
   void initState() {
     ///Left animation handle
@@ -153,57 +162,71 @@ class _SwipeAnimationScreenViewState extends State<SwipeAnimationScreenView> wit
               ),
             ),
             Expanded(
-              child: StackedListCarousel<CustomModel>(
-                behavior: CarouselBehavior.consume,
-                items: items,
-                controller: _stackedListController,
-                maxDisplayedItemCount: 4,
-                itemGapHeightFactor: 0.02,
-                outermostCardHeightFactor: 0.85,
-                transitionCurve: Curves.bounceInOut,
-                emptyBuilder: (_) => const Center(child: Text("No items found")),
-                outermostCardAnimationDuration: const Duration(milliseconds: 650),
-                cardBuilder: (context, item, size) {
-                  return CardSwipeItemView(image: item.image);
-                },
-                cardSwipedCallback: (item, direction) {
-                  print("cardSwipedCallback :: [$direction]");
-                  if (direction == SwipeDirection.bottomLeft || direction == SwipeDirection.topLeft) {
-                    isLeftAnimated = true;
-                    _leftAnimationController.forward();
-                    setState(() {});
-                  }
-                  if (direction == SwipeDirection.bottomRight || direction == SwipeDirection.topRight) {
-                    isRightAnimated = true;
-                    _rightAnimationController.forward();
-                    setState(() {});
-                  }
-                },
+              child: Stack(
+                alignment: AlignmentDirectional.center,
+                children: [
+                  StackedListCarousel<CustomModel>(
+                    key: _globalKey,
+                    behavior: CarouselBehavior.consume,
+                    items: items,
+                    controller: _stackedListController,
+                    maxDisplayedItemCount: 4,
+                    itemGapHeightFactor: 0.02,
+                    outermostCardHeightFactor: 0.85,
+                    transitionCurve: Curves.bounceInOut,
+                    emptyBuilder: (_) => const Center(child: Text("No items found")),
+                    outermostCardAnimationDuration: const Duration(milliseconds: 650),
+                    cardBuilder: (context, item, size) {
+                      return CardSwipeItemView(image: item.image);
+                    },
+                    cardSwipedCallback: (item, direction) {
+                      print("cardSwipedCallback :: [$direction]");
+                      if (direction == SwipeDirection.bottomLeft || direction == SwipeDirection.topLeft) {
+                        isLeftAnimated = true;
+                        _leftAnimationController.forward();
+                        setState(() {});
+                      }
+                      if (direction == SwipeDirection.bottomRight || direction == SwipeDirection.topRight) {
+                        isRightAnimated = true;
+                        _rightAnimationController.forward();
+                        setState(() {});
+                      }
+                    },
+                  ),
+
+                  ///48
+                  Positioned(
+                    bottom: 130,
+                    child: BottomView(
+                      onLeftTap: () {
+                        RenderBox renderBox = _globalKey.currentContext!.findRenderObject() as RenderBox;
+                        Size size = renderBox.size;
+                        _stackedListController.outermostCardOffset.value = renderBox.globalToLocal(Offset(-((size.width / 2) - 30), (size.height / 3.5)));
+                        _stackedListController.changeOrders(withOutermostDiscardEffect: true);
+                        isLeftAnimated = true;
+                        _leftAnimationController.forward();
+                        setState(() {});
+                      },
+                      onRightTap: () {
+                        RenderBox renderBox = _globalKey.currentContext!.findRenderObject() as RenderBox;
+                        Size size = renderBox.size;
+                        _stackedListController.outermostCardOffset.value = renderBox.globalToLocal(Offset((size.width / 2) - 30, (size.height / 3.5)));
+                        isRightAnimated = true;
+                        _rightAnimationController.forward();
+                        _stackedListController.changeOrders(withOutermostDiscardEffect: true);
+                        setState(() {});
+                      },
+                      isLeftAnimated: isLeftAnimated,
+                      leftAnimation: _leftAnimation,
+                      leftAnimationController: _leftAnimationController,
+                      isRightAnimated: isRightAnimated,
+                      rightAnimation: _rightAnimation,
+                      rightAnimationController: _rightAnimationController,
+                    ),
+                  ),
+                ],
               ),
             ),
-
-            ///48
-            BottomView(
-              onLeftTap: () {
-                _stackedListController.changeOrders();
-                isLeftAnimated = true;
-                _leftAnimationController.forward();
-                setState(() {});
-              },
-              onRightTap: () {
-                isRightAnimated = true;
-                _rightAnimationController.forward();
-                _stackedListController.changeOrders(withOutermostDiscardEffect: true);
-                setState(() {});
-              },
-              isLeftAnimated: isLeftAnimated,
-              leftAnimation: _leftAnimation,
-              leftAnimationController: _leftAnimationController,
-              isRightAnimated: isRightAnimated,
-              rightAnimation: _rightAnimation,
-              rightAnimationController: _rightAnimationController,
-            ),
-            const SizedBox(height: 30),
           ],
         ),
       ),
@@ -341,7 +364,7 @@ class BottomView extends StatelessWidget {
               animationController: leftAnimationController,
               child: const Icon(Icons.cancel_outlined),
             ),
-            const SizedBox(width: 59),
+            const SizedBox(width: 30),
             CircleButtonView(
               onTap: onRightTap,
               isAnimated: isRightAnimated,

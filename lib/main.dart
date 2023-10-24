@@ -199,20 +199,22 @@ class _SwipeAnimationScreenViewState extends State<SwipeAnimationScreenView> wit
                     bottom: 130,
                     child: BottomView(
                       onLeftTap: () {
-                        RenderBox renderBox = _globalKey.currentContext!.findRenderObject() as RenderBox;
-                        Size size = renderBox.size;
-                        _stackedListController.outermostCardOffset.value = renderBox.globalToLocal(Offset(-((size.width / 2) - 30), (size.height / 3.5)));
-                        _stackedListController.changeOrders(withOutermostDiscardEffect: true);
                         isLeftAnimated = true;
                         _leftAnimationController.forward();
+                        RenderBox renderBox = _globalKey.currentContext!.findRenderObject() as RenderBox;
+                        Size size = renderBox.size;
+                        Offset offset = Offset(-((size.width / 2)), (size.height / 4.5));
+                        _stackedListController.outermostCardOffset.value = renderBox.globalToLocal(offset);
+                        _stackedListController.changeOrders(withOutermostDiscardEffect: true);
                         setState(() {});
                       },
                       onRightTap: () {
-                        RenderBox renderBox = _globalKey.currentContext!.findRenderObject() as RenderBox;
-                        Size size = renderBox.size;
-                        _stackedListController.outermostCardOffset.value = renderBox.globalToLocal(Offset((size.width / 2) - 30, (size.height / 3.5)));
                         isRightAnimated = true;
                         _rightAnimationController.forward();
+                        RenderBox renderBox = _globalKey.currentContext!.findRenderObject() as RenderBox;
+                        Size size = renderBox.size;
+                        Offset offset = Offset((size.width / 2), (size.height / 4.5));
+                        _stackedListController.outermostCardOffset.value = renderBox.globalToLocal(offset);
                         _stackedListController.changeOrders(withOutermostDiscardEffect: true);
                         setState(() {});
                       },
